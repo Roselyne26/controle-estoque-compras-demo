@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle estoque/compras — Demo</title><meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css?v=20260711-erros-firebase">
+</head>
+<body><div class="demo-banner">DEMONSTRAÇÃO · Controle estoque/compras · Use apenas dados fictícios</div>
+
+<!-- LOGIN -->
+<div id="loginTela" class="login-container">
+
+  <!-- LADO ESQUERDO -->
+ <div class="login-left">
+  <div class="login-slogan-box">
+  <span class="login-slogan">Gestão de estoque inteligente</span>
+</div>
+  <div class="marca-demo">Controle<br><span>estoque/compras</span></div>
+</div>
+
+  <!-- LADO DIREITO -->
+  <div class="login-right">
+    <h2>Conheça o sistema</h2>
+    <p class="login-subtitle">
+      Explore com dados fictícios, sem cadastro. Suas alterações ficam separadas das de outros visitantes.
+    </p>
+
+    <button id="btnLogin">Entrar na demo</button>
+
+  </div>
+
+</div>
+
+<div id="sistema" style="display:none">
+
+  <aside class="menu-lateral">
+
+  <!-- LOGO -->
+  <div class="logo-menu">
+    <div class="marca-demo">Controle<br><span>estoque/compras</span></div>
+  </div>
+
+  <!-- MENU -->
+  <nav>
+    <button onclick="mostrarTela('dashboard')">Dashboard</button>
+    <button onclick="mostrarTela('fornecedores')">Fornecedores</button>
+    <button onclick="mostrarTela('produtos')">Produtos</button>
+    <button onclick="mostrarTela('entradas')">Entradas</button>
+    <button onclick="mostrarTela('saidas')">Saídas</button>
+    <button onclick="mostrarTela('servicos')">Serviços</button>
+    <button class="menu-relatorios-btn" onclick="alternarMenuRelatorios()">Relatórios ▾</button>
+    <div id="submenuRelatorios" class="submenu-relatorios">
+      <button onclick="abrirRelatorio('estoque')">Relatório de estoque</button>
+      <button onclick="abrirRelatorio('produtos-estoque')">Produtos em estoque</button>
+      <button onclick="abrirRelatorio('media')">Relatório de média de duração</button>
+      <button onclick="abrirRelatorio('servicos')">Relatório de serviços</button>
+    </div>
+  </nav>
+
+</aside>
+
+
+  <main>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="tela">
+  <div class="dashboard-header">
+    <h2>Dashboard</h2>
+    <div class="dashboard-periodo">
+      <label for="dashMesAno">Mês/Ano</label>
+      <input type="month" id="dashMesAno" onchange="atualizarDashboard()">
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <div class="dash-card">
+      <div class="dash-icon">📦</div>
+      <span class="dash-title">Total de produtos</span>
+      <strong id="dashTotalProdutos" class="dash-value"></strong>
+      <button class="dash-btn" onclick="abrirProdutosDashboard()">Ver</button>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon">📦⬇️</div>
+      <span class="dash-title">Total de entradas</span>
+      <strong id="dashEntradas" class="dash-value money"></strong>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon">📦⬆️</div>
+      <span class="dash-title">Total de saídas</span>
+      <strong id="dashSaidas" class="dash-value money"></strong>
+    </div>
+
+    <div class="dash-card alert">
+      <div class="dash-icon">⚠️📦</div>
+      <span class="dash-title">Estoque baixo</span>
+      <strong id="dashBaixo" class="dash-value"></strong>
+      <button class="dash-btn" onclick="abrirEstoqueBaixo()">Ver</button>
+    </div>
+
+  </div>
+
+  <div class="dashboard-ranking">
+    <h3>Ranking de retirada do estoque</h3>
+    <p class="ranking-subtitulo">Pessoas que mais retiraram itens no mês selecionado</p>
+    <div id="dashRankingResponsaveis" class="ranking-lista"></div>
+  </div>
+</section>
+
+<!-- FORNECEDORES -->
+<section id="fornecedores" class="tela">
+  <h2>Cadastrar fornecedor</h2>
+
+  <label>Nome:</label>
+  <input id="fornNome">
+
+  <label>CNPJ:</label>
+  <input id="fornCnpj" oninput="formatarCNPJ(this)">
+
+  <label>Contato:</label>
+  <input id="fornContato" oninput="formatarContato(this)">
+
+  <button onclick="cadastrarFornecedor()">Cadastrar</button>
+
+  <h3>
+    Fornecedores cadastrados
+    <input placeholder="Pesquisar" oninput="filtrarFornecedores(this.value)">
+  </h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>CNPJ</th>
+        <th>Contato</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="listaFornecedores"></tbody>
+  </table>
+  <div class="lista-controle">
+    <span id="statusFornecedores"></span>
+    <button id="btnMaisFornecedores" onclick="mostrarMaisFornecedores()">Mostrar mais</button>
+  </div>
+
+</section>
+
+<!-- PRODUTOS -->
+<section id="produtos" class="tela">
+  <h2>Cadastrar produto</h2>
+
+  <label>Nome:</label>
+  <input id="prodNome" placeholder="Ex: SACO DE LIXO, BALA, ÁLCOOL 70%">
+
+  <label>Descrição:</label>
+  <input id="prodDescricao" placeholder="Ex: 15L, 500 g, 1 L, Tamanho P, Caixa com 100 unidades">
+
+  <label>Unidade:</label>
+  <select id="prodUnidade">
+    <option value="">Selecione</option>
+    <option>Unidade</option>
+    <option>Pacote</option>
+    <option>Caixa</option>
+    <option>Frasco</option>
+    <option>Galão</option>
+    <option>Rolo</option>
+    <option>Kit</option>
+    <option>Par</option>
+    <option>Envelope</option>
+  </select>
+
+  <label>Valor:</label>
+  <input type="text" id="prodValor" inputmode="decimal" placeholder="R$ 0,00">
+
+  <label>Quantidade mínima:</label>
+  <input type="number" id="prodMin">
+
+  <label class="check-line">
+    <input type="checkbox" id="prodSemEstoque">
+    Não há necessidade de estoque
+  </label>
+
+  <label class="check-line">
+    <input type="checkbox" id="prodRecorrente">
+    Compra recorrente
+  </label>
+
+  <label>Fornecedor:</label>
+  <input list="listaAutoFornecedores" id="prodFornecedor" data-fornecedor-id placeholder="Digite o nome do fornecedor">
+
+  <button id="btnCadastrarProduto" onclick="cadastrarProduto()">Cadastrar</button>
+
+
+  <h3>
+    Produtos cadastrados
+    <input placeholder="Pesquisar" oninput="filtrarProdutos(this.value)">
+  </h3>
+
+  <table>
+    <thead>
+     <tr>
+      <th>Nome</th>
+      <th>Descrição</th>
+      <th>Unidade</th>
+      <th>Quantidade</th>
+      <th>Valor</th>
+      <th>Mínimo</th>
+      <th>Recorrente</th>
+      <th>Fornecedor</th>
+      <th>Ações</th>
+    </tr>
+ </thead>
+    <tbody id="listaProdutos"></tbody>
+  </table>
+  <div class="lista-controle">
+    <span id="statusProdutos"></span>
+    <button id="btnMaisProdutos" onclick="mostrarMaisProdutos()">Mostrar mais</button>
+  </div>
+</section>
+
+<!-- ENTRADAS -->
+<section id="entradas" class="tela">
+  <h2>Entrada</h2>
+
+  <label>Produto:</label>
+  <input list="listaAutoProdutos" id="entradaProduto" data-produto-id>
+
+  <label>Quantidade:</label>
+  <input type="number" id="entradaQtd" min="1">
+
+  <label>Observação:</label>
+  <input id="entradaObs" placeholder="Alguma observação para a entrada? Devolução de alguma coisa, produto que é brinde">
+
+  <div class="entrada-opcoes">
+    <label class="opcao-selecionavel">
+      <input type="checkbox" id="entradaDevolucao">
+      <span>Devolução ao estoque <small>(não contabiliza valor de entrada)</small></span>
+    </label>
+    <label class="opcao-selecionavel">
+      <input type="checkbox" id="entradaRegistrarSaida" onchange="document.getElementById('entradaCamposSaida').classList.toggle('aberto', this.checked)">
+      <span>Registrar saída automaticamente</span>
+    </label>
+  </div>
+
+  <div id="entradaCamposSaida" class="entrada-campos-saida">
+    <label>Quantidade que está saindo:</label>
+    <input type="number" id="entradaSaidaQtd" min="1">
+    <label>Responsável pela saída:</label>
+    <input id="entradaSaidaResp" placeholder="Nome da pessoa que está retirando">
+    <label>Observação da saída:</label>
+    <input id="entradaSaidaObs" placeholder="Para onde? Qual o setor?">
+  </div>
+
+  <button id="btnRegistrarEntrada">Registrar entrada</button>
+
+</section>
+
+<!-- SAÍDAS -->
+<section id="saidas" class="tela">
+  <h2>Saída</h2>
+
+  <label>Produto:</label>
+  <input list="listaAutoProdutos" id="saidaProduto" data-produto-id>
+
+  <label>Quantidade:</label>
+  <input type="number" id="saidaQtd">
+
+  <label>Responsável:</label>
+  <input id="saidaResp" placeholder="Nome da pessoa que está retirando do estoque" required>
+
+  <label>Observação:</label>
+  <input id="saidaObs" placeholder="Para onde? Qual o setor?">
+
+  <button onclick="registrarSaida()">Registrar saída</button>
+</section>
+
+<!-- SERVIÇOS -->
+<section id="servicos" class="tela">
+  <h2>Lançamento de serviço</h2>
+
+  <label>Tipo de serviço:</label>
+  <select id="servicoTipo">
+    <option value="">Selecione</option>
+    <option>Mão de obra</option>
+    <option>Manutenção</option>
+    <option>Conserto</option>
+    <option>Instalação</option>
+    <option>Limpeza</option>
+    <option>Frete</option>
+    <option>Serviços terceirizados</option>
+  </select>
+
+  <label>Categoria:</label>
+  <select id="servicoCategoria">
+    <option value="">Selecione</option>
+    <option>Mão de obra</option>
+    <option>Manutenção</option>
+    <option>Conserto</option>
+    <option>Elétrica</option>
+    <option>Hidráulica</option>
+    <option>Limpeza</option>
+    <option>Frete</option>
+    <option>Terceirizados</option>
+    <option>Infraestrutura</option>
+    <option>Outros</option>
+  </select>
+
+  <label>Descrição:</label>
+  <textarea id="servicoDescricao" rows="3" placeholder="Breve descrição, se necessário"></textarea>
+
+  <label>Valor:</label>
+  <input type="number" id="servicoValor" step="0.01">
+
+  <button onclick="registrarServico()">Registrar serviço</button>
+</section>
+
+<!-- RELATÓRIOS -->
+<section id="relatorios" class="tela">
+  <h2>Relatórios</h2>
+
+  <h3 id="relatorioTitulo">Relatório de estoque</h3>
+
+  <div id="filtrosDataRelatorio">
+    <label>Data inicial</label>
+    <input type="date" id="dataInicio">
+
+    <label>Data final</label>
+    <input type="date" id="dataFim">
+  </div>
+
+  <button onclick="gerarRelatorioAtual()">Filtrar</button>
+  <button onclick="exportarRelatorioAtual()">Exportar Excel</button>
+
+  <table>
+  <thead>
+    <tr id="relatorioCabecalho">
+      <th>Data</th>
+      <th>Produto</th>
+      <th>Qtd</th>
+      <th>Tipo</th>
+      <th>Responsável / Fornecedor</th>
+      <th>Valor unit</th>
+      <th>Valor total</th>
+    </tr>
+  </thead>
+
+  <tbody id="listaRelatorio"></tbody>
+</table>
+  <div class="lista-controle">
+    <span id="statusRelatorio"></span>
+    <button id="btnMaisRelatorio" onclick="mostrarMaisRelatorio()">Mostrar mais</button>
+  </div>
+
+  <p id="totais"></p>
+</section>
+
+</main>
+</div>
+
+<datalist id="listaAutoProdutos"></datalist>
+<datalist id="listaAutoFornecedores"></datalist>
+<div id="popup" class="popup"></div>
+
+<div id="modalEstoqueBaixo" class="modal" style="display:none">
+  <div class="modal-content modal-estoque">
+    <div class="modal-topo">
+      <h3>Produtos com estoque baixo</h3>
+      <button class="btn-exportar-modal" onclick="exportarEstoqueBaixo()">Baixar Excel</button>
+      <button class="btn-fechar-modal" onclick="fecharEstoqueBaixo()">×</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Unidade</th>
+          <th>Qtd</th>
+          <th>Mínimo</th>
+          <th>Fornecedor</th>
+        </tr>
+      </thead>
+      <tbody id="listaEstoqueBaixo"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="modalProdutosDashboard" class="modal" style="display:none">
+  <div class="modal-content modal-estoque">
+    <div class="modal-topo">
+      <h3>Produtos cadastrados</h3>
+      <button class="btn-exportar-modal" onclick="exportarProdutosDashboard()">Baixar Excel</button>
+      <button class="btn-fechar-modal" onclick="fecharProdutosDashboard()">×</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Unidade</th>
+          <th>Qtd</th>
+          <th>Valor</th>
+          <th>Fornecedor</th>
+        </tr>
+      </thead>
+      <tbody id="listaProdutosDashboard"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module" src="./socorro2026.js?v=20260714-consumo-medio"></script>
+</body>
+</html>
+
